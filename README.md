@@ -1,4 +1,4 @@
 DaemonsDb.php
 ==========
 
-PDO exteneion for long-living connections
+PDO extention for long-living connections with some extra useful methods.
