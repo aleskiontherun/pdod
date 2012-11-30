@@ -53,7 +53,7 @@
  * @method mixed getAttribute(int $attribute) Retrieve a database connection attribute
  * @method string quote(string $string, int $parameter_type = PDO::PARAM_STR) Quotes a string for use in a query.
  */
-class DaemonsDb
+class PDOd
 {
 	/**
 	 * Stop trying to reconnect after this number of retries in a row
@@ -100,14 +100,6 @@ class DaemonsDb
 				return $this->onException($e, $method_name, $args);
 			}
 		}
-	}
-
-	/**
-	 * @return PDO
-	 */
-	public function pdo()
-	{
-		return self::$pdo;
 	}
 
 	/**
