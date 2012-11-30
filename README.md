@@ -1,4 +1,4 @@
 DaemonsDb.php
 ==========
 
-PDO exteneion for long-living connections
+PDO extension for long-living MySQL connections
