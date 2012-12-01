@@ -169,7 +169,9 @@ class DaemonsDb
 
 		try
 		{
-			self::$pdo = new PDO(DB_CONNECTION_STRING, DB_USER, DB_PASSWORD);
+			self::$pdo = new PDO(DB_CONNECTION_STRING, DB_USER, DB_PASSWORD, array(
+				PDO::ATTR_PERSISTENT => true
+			));
 			self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 			if (defined('DB_CHARSET') && DB_CHARSET)
