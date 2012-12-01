@@ -174,7 +174,7 @@ class DaemonsDb
 
 			if (defined('DB_CHARSET') && DB_CHARSET)
 			{
-				self::$pdo->query("set names '" . DB_CHARSET . "'");
+				self::$pdo->exec("SET CHARACTER SET '" . DB_CHARSET . "'");
 			}
 		}
 		catch (PDOException $e)
