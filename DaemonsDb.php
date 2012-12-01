@@ -286,7 +286,7 @@ class DaemonsDb
 
 		if ($query = $this->query($sql, $params))
 		{
-			return self::$pdo->lastInsertId();
+			return $this->lastInsertId();
 		}
 		return false;
 	}
