@@ -77,7 +77,7 @@ class DaemonsDb
 	{
 		if (!self::$pdo)
 		{
-			self::reconnect();
+			$this->reconnect();
 		}
 	}
 
@@ -136,7 +136,7 @@ class DaemonsDb
 			}
 			// Uncomment the following to log lost connections
 			//self::errlog($err_str . ' Trying to reconnect...');
-			self::reconnect();
+			$this->reconnect();
 			if ($method)
 			{
 				$result = call_user_func_array(array($this, $method), $arguments);
@@ -163,16 +163,24 @@ class DaemonsDb
 	 * Establish a new connection instead of a previous if one
 	 * @return PDO
 	 */
-	public static function reconnect()
+	public function reconnect()
 	{
 		self::$pdo = null;
 
-		self::$pdo = new PDO(DB_CONNECTION_STRING, DB_USER, DB_PASSWORD);
-		self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-		if (defined('DB_CHARSET') && DB_CHARSET)
+		try
 		{
-			self::$pdo->query("set names '" . DB_CHARSET . "'");
+			self::$pdo = new PDO(DB_CONNECTION_STRING, DB_USER, DB_PASSWORD);
+			self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+			if (defined('DB_CHARSET') && DB_CHARSET)
+			{
+				self::$pdo->query("set names '" . DB_CHARSET . "'");
+			}
+		}
+		catch (PDOException $e)
+		{
+			$this->onException($e);
+			exit;
 		}
 	}
 
