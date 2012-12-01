@@ -35,7 +35,7 @@
  * a consistent errors handling by the class and respawning lost connections.
  *
  * @author Aleksei Vesnin <dizeee@dizeee.ru>
- * @version 1.1
+ * @version 1.1.1
  * @license MIT
  * @link https://github.com/dizeee/daemons-db
  * @link http://php.net/manual/en/class.pdo.php
@@ -327,7 +327,6 @@ class DaemonsDb
 	 */
 	public function delete($table, $where, $params = array())
 	{
-		$table = str_replace('`', '', $table);
 		$sql = 'DELETE FROM `' . $table . '` WHERE ' . $where;
 		if ($query = $this->query($sql, $params))
 		{
