@@ -7,14 +7,10 @@
  * <code>
  *
  * <?php
- * define('DB_CONNECTION_STRING', 'mysql:host=127.0.0.1;dbname=test');
- * define('DB_USER', 'root');
- * define('DB_PASSWORD', '');
- * define('DB_CHARSET', 'utf8');
  *
- * require_once('DaemonsDb.php');
+ * require_once('PDOd.php');
  *
- * $db = new DaemonsDb();
+ * $db = new PDOd('mysql:host=127.0.0.1;dbname=test', 'root', 'mypasswd', 'utf8');
  *
  * $pid = posix_getpid();
  *
@@ -35,9 +31,9 @@
  * a consistent errors handling by the class and respawning lost connections.
  *
  * @author Aleksei Vesnin <dizeee@dizeee.ru>
- * @version 1.1.1
+ * @version 2.0
  * @license MIT
- * @link https://github.com/dizeee/daemons-db
+ * @link https://github.com/dizeee/pdod
  * @link http://php.net/manual/en/class.pdo.php
  *
  * @method PDOStatement prepare(string $statement, array $driver_options = null) Prepares a statement for execution and returns a statement object
@@ -53,7 +49,7 @@
  * @method mixed getAttribute(int $attribute) Retrieve a database connection attribute
  * @method string quote(string $string, int $parameter_type = PDO::PARAM_STR) Quotes a string for use in a query.
  */
-class DaemonsDb
+class PDOd
 {
 	/**
 	 * Stop trying to reconnect after this number of retries in a row
@@ -63,22 +59,29 @@ class DaemonsDb
 	/**
 	 * @var int - Retries counter
 	 */
-	public static $connection_retries = 0;
+	public $connection_retries = 0;
+
+	protected $connectionString;
+	protected $username;
+	protected $password;
+	protected $charset;
 
 	/**
-	 * @var PDO - A single instance of a connection object
+	 * @var PDO - An instance of a connection object
 	 */
-	private static $pdo;
+	protected $pdo;
 
 	/**
-	 * Uses a single PDO connection in every class instance
+	 * Init the connection
 	 */
-	public function __construct()
+	public function __construct($connection_string = "", $username = "", $password = "", $charset = "utf8")
 	{
-		if (!self::$pdo)
-		{
-			$this->reconnect();
-		}
+		$this->connectionString = $connection_string;
+		$this->username = $username;
+		$this->password = $password;
+		$this->charset = $charset;
+
+		$this->reconnect();
 	}
 
 	/**
@@ -89,17 +92,18 @@ class DaemonsDb
 	 */
 	public function __call($method_name, $args)
 	{
-		if (method_exists(self::$pdo, $method_name))
+		if (method_exists($this->pdo, $method_name))
 		{
 			try
 			{
-				return call_user_func_array(array(self::$pdo, $method_name), $args);
+				return call_user_func_array(array($this->pdo, $method_name), $args);
 			}
 			catch (PDOException $e)
 			{
 				return $this->onException($e, $method_name, $args);
 			}
 		}
+		return false;
 	}
 
 	/**
@@ -108,7 +112,8 @@ class DaemonsDb
 	 */
 	private static function errlog($str)
 	{
-		printf("[%s] ERROR: %s\n", date("c"), $str);
+		$str = sprintf("[%s] ERROR: %s\n", date("c"), $str);
+		echo $str;
 		// Better log to a file, uh?
 	}
 
@@ -118,7 +123,7 @@ class DaemonsDb
 	 * #2013 Lost connection to MySQL server during query
 	 * Exits with an error message if failed to reconnect self::MAX_CONNECTION_RETRIES times
 	 * @param PDOException $e
-	 * @param string $method A DaemonsDb or PDO method name to be executed after a connection is restored
+	 * @param string $method A PDOd or PDO method name to be executed after a connection is restored
 	 * @param array $arguments The method arguments
 	 * @return mixed|bool The method result if it is a lost connection exception or false otherwise
 	 */
@@ -129,10 +134,10 @@ class DaemonsDb
 		if (in_array($e->errorInfo[1], array(2006, 2013)))
 		{
 			$err_str = 'Connection failed with error ' . $e->errorInfo[1] . ' "' . $e->errorInfo[2] . '".';
-			if (++self::$connection_retries >= self::MAX_CONNECTION_RETRIES)
+			if (++$this->connection_retries >= self::MAX_CONNECTION_RETRIES)
 			{
 				self::errlog($err_str . ' Maximum retries made (' . self::MAX_CONNECTION_RETRIES . '). Exiting...');
-				exit;
+				exit(1);
 			}
 			// Uncomment the following to log lost connections
 			//self::errlog($err_str . ' Trying to reconnect...');
@@ -140,7 +145,7 @@ class DaemonsDb
 			if ($method)
 			{
 				$result = call_user_func_array(array($this, $method), $arguments);
-				self::$connection_retries = 0;
+				$this->connection_retries = 0;
 				return $result;
 			}
 		}
@@ -165,24 +170,22 @@ class DaemonsDb
 	 */
 	public function reconnect()
 	{
-		self::$pdo = null;
+		$this->pdo = null;
 
 		try
 		{
-			self::$pdo = new PDO(DB_CONNECTION_STRING, DB_USER, DB_PASSWORD, array(
-				PDO::ATTR_PERSISTENT => true
-			));
-			self::$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		    $this->pdo = new PDO($this->connectionString, $this->username, $this->password);
+		    $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-			if (defined('DB_CHARSET') && DB_CHARSET)
-			{
-				self::$pdo->exec("SET CHARACTER SET '" . DB_CHARSET . "'");
-			}
+		    if ($this->charset)
+		    {
+		    	$this->query("SET NAMES :charset", array(':charset' => $this->charset));
+		    }
 		}
 		catch (PDOException $e)
 		{
 			$this->onException($e);
-			exit;
+			exit(1);
 		}
 	}
 
@@ -196,7 +199,7 @@ class DaemonsDb
 	{
 		try
 		{
-			$query = self::$pdo->prepare($sql);
+			$query = $this->pdo->prepare($sql);
 			$query->execute($params);
 		}
 		catch (PDOException $e)
@@ -286,7 +289,7 @@ class DaemonsDb
 
 		if ($query = $this->query($sql, $params))
 		{
-			return $this->lastInsertId();
+			return $this->pdo->lastInsertId();
 		}
 		return false;
 	}
