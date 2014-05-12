@@ -41,13 +41,13 @@
  * @method bool commit() Commits a transaction
  * @method bool rollBack() Rolls back a transaction
  * @method bool inTransaction() Checks if inside a transaction
- * @method bool setAttribute(int $attribute, mixed $value) Set an attribute
+ * @method bool setAttribute(integer $attribute, mixed $value) Set an attribute
  * @method bool exec(string $statement) Execute an SQL statement and return the number of affected rows
  * @method string lastInsertId(string $name = null) Returns the ID of the last inserted row or sequence value
  * @method mixed errorCode() Fetch the SQLSTATE associated with the last operation on the database handle
  * @method array errorInfo() Fetch extended error information associated with the last operation on the database handle
- * @method mixed getAttribute(int $attribute) Retrieve a database connection attribute
- * @method string quote(string $string, int $parameter_type = PDO::PARAM_STR) Quotes a string for use in a query.
+ * @method mixed getAttribute(integer $attribute) Retrieve a database connection attribute
+ * @method string quote(string $string, integer $parameter_type = PDO::PARAM_STR) Quotes a string for use in a query.
  */
 class PDOd
 {
@@ -57,7 +57,7 @@ class PDOd
 	const MAX_CONNECTION_RETRIES = 10;
 
 	/**
-	 * @var int - Retries counter
+	 * @var integer - Retries counter
 	 */
 	public $connection_retries = 0;
 
@@ -88,7 +88,7 @@ class PDOd
 	 * Executes a PDO method, called within this class instance
 	 * @param $method_name
 	 * @param $args
-	 * @return mixed|void
+	 * @return mixed
 	 */
 	public function __call($method_name, $args)
 	{
@@ -108,7 +108,7 @@ class PDOd
 
 	/**
 	 * Handles an error log
-	 * @param string $str Error message to put in log
+	 * @param string $str The error message to log
 	 */
 	private static function errlog($str)
 	{
@@ -121,8 +121,8 @@ class PDOd
 	 * Handles PDO Exceptions. Tries to reconnect on one of the following MySQL errors:
 	 * #2006 MySQL Server has gone away
 	 * #2013 Lost connection to MySQL server during query
-	 * Exits with an error message if failed to reconnect self::MAX_CONNECTION_RETRIES times
-	 * @param PDOException $e
+	 * Exits with an error message if failed to reconnect {@link PDOd::MAX_CONNECTION_RETRIES} times
+	 * @param PDOException $e The exception instance
 	 * @param string $method A PDOd or PDO method name to be executed after a connection is restored
 	 * @param array $arguments The method arguments
 	 * @return mixed|bool The method result if it is a lost connection exception or false otherwise
@@ -191,9 +191,9 @@ class PDOd
 
 	/**
 	 * Perform a query with a prepared statement
-	 * @param string $sql
-	 * @param array $params
-	 * @return PDOStatement|bool
+	 * @param string $sql The SQL statement to be executed
+	 * @param array $params Parameters to be bound to the query
+	 * @return PDOStatement|bool The executed query instance or false on failure
 	 */
 	public function query($sql, $params = array())
 	{
@@ -211,8 +211,8 @@ class PDOd
 
 	/**
 	 * Executes a query and returns all fetched results
-	 * @param string $sql
-	 * @param array $params
+	 * @param string $sql The SQL statement to be executed
+	 * @param array $params Parameters to be bound to the query
 	 * @return array|bool Fetched data or false on failure
 	 */
 	public function queryAll($sql, $params = array())
@@ -225,10 +225,10 @@ class PDOd
 	}
 
 	/**
-	 * Executes a query and returns a single row of data.
-	 * @param string $sql
-	 * @param array $params
-	 * @return mixed|bool Fetched data or false on failure
+	 * Executes a query and returns a single row of data in an array.
+	 * @param string $sql The SQL statement to be executed
+	 * @param array $params Parameters to be bound to the query
+	 * @return array|bool Fetched data or false on failure
 	 */
 	public function queryRow($sql, $params = array())
 	{
@@ -241,9 +241,9 @@ class PDOd
 
 	/**
 	 * Executes a query and returns an array of values from a column
-	 * @param string $sql
-	 * @param array $params
-	 * @param int $column_index
+	 * @param string $sql The SQL statement to be executed
+	 * @param array $params Parameters to be bound to the query
+	 * @param integer $column_index Zero-based index of the column to return
 	 * @return array|bool Fetched data or false on failure
 	 */
 	public function queryColumn($sql, $params = array(), $column_index = 0)
@@ -257,8 +257,8 @@ class PDOd
 
 	/**
 	 * Executes a query and returns one single value of first column in a first row found
-	 * @param string $sql
-	 * @param array $params
+	 * @param string $sql The SQL statement to be executed
+	 * @param array $params Parameters to be bound to the query
 	 * @return mixed|bool The value or false on failure
 	 */
 	public function queryScalar($sql, $params = array())
@@ -272,8 +272,8 @@ class PDOd
 
 	/**
 	 * Inserts a single row into a table.
-	 * @param string $table
-	 * @param array $data
+	 * @param string $table The table name to insert data into
+	 * @param array $data Data to be inserted (column name => column value)
 	 * @return string|bool The ID of the inserted row or false on failure
 	 */
 	public function insert($table, $data)
@@ -296,10 +296,10 @@ class PDOd
 
 	/**
 	 * Updates a table
-	 * @param string $table
-	 * @param array $data
-	 * @param string $where
-	 * @param array $params
+	 * @param string $table The table name to update data in
+	 * @param array $data Data to be updated (column name => column value)
+	 * @param string $where SQL expression for WHERE clause
+	 * @param array $params Parameters to be bound to the query
 	 * @return integer|bool The number of updated rows or false on failure
 	 */
 	public function update($table, $data, $where = '1', $params = array())
@@ -323,9 +323,9 @@ class PDOd
 
 	/**
 	 * Deletes data from a table
-	 * @param string $table
-	 * @param string $where
-	 * @param array $params
+	 * @param string $table The table name to delete data from
+	 * @param string $where SQL expression for WHERE clause
+	 * @param array $params Parameters to be bound to the query
 	 * @return integer|bool The number of deleted rows or false on failure
 	 */
 	public function delete($table, $where, $params = array())
