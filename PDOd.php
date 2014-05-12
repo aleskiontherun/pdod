@@ -1,4 +1,5 @@
 <?php
+
 /**
  * PDO extension to use in daemons. Designed to support long-living MySQL connections.
  *
@@ -31,7 +32,7 @@
  * a consistent errors handling by the class and respawning lost connections.
  *
  * @author Aleksei Vesnin <dizeee@dizeee.ru>
- * @version 2.0
+ * @version 2.0.1
  * @license MIT
  * @link https://github.com/dizeee/pdod
  * @link http://php.net/manual/en/class.pdo.php
@@ -174,13 +175,13 @@ class PDOd
 
 		try
 		{
-		    $this->pdo = new PDO($this->connectionString, $this->username, $this->password);
-		    $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			$this->pdo = new PDO($this->connectionString, $this->username, $this->password);
+			$this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-		    if ($this->charset)
-		    {
-		    	$this->query("SET NAMES :charset", array(':charset' => $this->charset));
-		    }
+			if ($this->charset)
+			{
+				$this->query("SET NAMES :charset", array(':charset' => $this->charset));
+			}
 		}
 		catch (PDOException $e)
 		{
@@ -243,14 +244,14 @@ class PDOd
 	 * Executes a query and returns an array of values from a column
 	 * @param string $sql The SQL statement to be executed
 	 * @param array $params Parameters to be bound to the query
-	 * @param integer $column_index Zero-based index of the column to return
+	 * @param integer $column_number Zero-indexed number of the column to retrieve from the row
 	 * @return array|bool Fetched data or false on failure
 	 */
-	public function queryColumn($sql, $params = array(), $column_index = 0)
+	public function queryColumn($sql, $params = array(), $column_number = 0)
 	{
 		if ($query = $this->query($sql, $params))
 		{
-			return $query->fetchAll(PDO::FETCH_COLUMN, $column_index);
+			return $query->fetchAll(PDO::FETCH_COLUMN, $column_number);
 		}
 		return false;
 	}
@@ -263,9 +264,9 @@ class PDOd
 	 */
 	public function queryScalar($sql, $params = array())
 	{
-		if ($row = $this->queryRow($sql, $params))
+		if ($query = $this->query($sql, $params))
 		{
-			foreach ($row as $var) return $var;
+			return $query->fetchColumn();
 		}
 		return false;
 	}
@@ -299,7 +300,7 @@ class PDOd
 	 * @param string $table The table name to update data in
 	 * @param array $data Data to be updated (column name => column value)
 	 * @param string $where SQL expression for WHERE clause
-	 * @param array $params Parameters to be bound to the query
+	 * @param array $params Parameters to be bound to the WHERE clause
 	 * @return integer|bool The number of updated rows or false on failure
 	 */
 	public function update($table, $data, $where = '1', $params = array())
@@ -325,7 +326,7 @@ class PDOd
 	 * Deletes data from a table
 	 * @param string $table The table name to delete data from
 	 * @param string $where SQL expression for WHERE clause
-	 * @param array $params Parameters to be bound to the query
+	 * @param array $params Parameters to be bound to the WHERE clause
 	 * @return integer|bool The number of deleted rows or false on failure
 	 */
 	public function delete($table, $where, $params = array())
